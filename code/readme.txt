@@ -1,5 +1,3 @@
-Ces codes sont:
-
-go2_comp: le code qui implémente le filtre complémentaire au robot
-go2_obstacle: le code qui fait l'évitement d'obstacle et le retour à la position initiale
-go2_compstacle: le code qui combine les deux précédents
+go2_comp: Implementation of the complementary filter on the robot
+go2_obstacle: Obstacle avoidance & return to initial position code
+go2_compstacle: This code is the combination of the two others, it uses the complementary filter found values to return to its initial position
