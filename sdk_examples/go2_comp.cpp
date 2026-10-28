@@ -335,7 +335,7 @@ int main(int argc, char **argv)
 	     errvz /=10;
 	     
 	double roll = 0.0, pitch = 0.0, yaw = 0.0;
-	double dt = 0.01;  // 10 ms
+	double dt = 0.05;  // loop period [s], matches the sleep below
 	double x = custom.state.position()[0];
 	double y = custom.state.position()[1];
 	double z = custom.state.position()[2];
@@ -385,7 +385,7 @@ int main(int argc, char **argv)
 	    std::cout << "xcomp: " << x << " ycomp: " << y << " zcomp: " << z << std::endl;
 	    std::cout << "x: " << custom.state.position()[0] << " y: " << custom.state.position()[1] << " z: " << custom.state.position()[2] << std::endl;
 	    
-	    std::this_thread::sleep_for(std::chrono::milliseconds(50)); // Pause 10 ms
+	    std::this_thread::sleep_for(std::chrono::milliseconds(50)); // Loop period
 	}
 
 
