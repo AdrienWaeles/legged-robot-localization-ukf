@@ -247,8 +247,8 @@ void updateOrientation(double &roll, double &pitch, double dt,
     double pitch_gyro = pitch + gp * dt;
 
     // Estimation de l'orientation à partir de l'accéléromètre
-    double roll_acc = atan2(apitch, sqrt(aroll * aroll + 9.81 * 9.81)) * 180.0 / M_PI;
-    double pitch_acc = atan2(-aroll, 9.81) * 180.0 / M_PI;
+    double roll_acc = atan2(apitch, sqrt(aroll * aroll + g * g));
+    double pitch_acc = atan2(-aroll, g);
 
     // Fusion des données
     roll = alpha * roll_gyro + (1 - alpha) * roll_acc;

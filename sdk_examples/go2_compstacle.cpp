@@ -83,8 +83,8 @@ public:
     void updateOrientation(double gr, double gp, double a_roll, double a_pitch) {
         double roll_gyro  = f_roll + gr * dt;
         double pitch_gyro = f_pitch + gp * dt;
-        double roll_acc   = atan2(a_pitch, sqrt(a_roll * a_roll + g * g)) * 180.0 / M_PI;
-        double pitch_acc  = atan2(-a_roll, g) * 180.0 / M_PI;
+        double roll_acc   = atan2(a_pitch, sqrt(a_roll * a_roll + g * g));
+        double pitch_acc  = atan2(-a_roll, g);
         f_roll  = alpha_filter * roll_gyro + (1 - alpha_filter) * roll_acc;
         f_pitch = alpha_filter * pitch_gyro + (1 - alpha_filter) * pitch_acc;
         // Pour le yaw, on se fie directement à l'IMU
