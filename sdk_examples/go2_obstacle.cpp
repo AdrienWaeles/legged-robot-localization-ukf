@@ -46,19 +46,16 @@ public:
 
     void AvoidObstacle(const geometry_msgs::msg::dds_::PointStamped_ *range_msg) {
      	if (range_msg->point().x()<0.5){
-	     std::cout << "AAAAAAAAAAAAAAAAAA\n";
+	     std::cout << "Obstacle ahead: " << range_msg->point().x() << " m\n";
 	     sport_client.Move(-0.5, 0, 0);
-	     std::cout <<range_msg->point().x() <<"\n";
     	}
 	if (range_msg->point().y()<0.1){
-	     std::cout << "AAAAAAAAAAAAAAAAAA\n";
+	     std::cout << "Obstacle on the left: " << range_msg->point().y() << " m\n";
 	     sport_client.Move(0, -0.3, 0);
-	     std::cout <<range_msg->point().y() <<"\n";
 	}
 	 if (range_msg->point().z()<0.1){
-	     std::cout << "AAAAAAAAAAAAAAAAAA\n";
+	     std::cout << "Obstacle on the right: " << range_msg->point().z() << " m\n";
 	     sport_client.Move(0, 0.3, 0);
-	     std::cout <<range_msg->point().z() <<"\n";
    	}
     }
 
