@@ -3,6 +3,8 @@
 #include <unitree/idl/ros2/PointStamped_.hpp>
 #include <unitree/robot/go2/sport/sport_client.hpp>
 #include <unistd.h>
+#include <algorithm>
+#include <cmath>
 #include <cstdlib>
 #include <functional>
 #include <iostream>
@@ -17,6 +19,14 @@ using namespace unitree::common;
 struct Position {
     double x, y, yaw;
 };
+
+// Move() takes a body-frame velocity, so the speed is limited and the world-frame error is rotated
+const double MAX_SPEED = 0.3;      // [m/s]
+const double MAX_YAW_RATE = 0.5;   // [rad/s]
+
+double Clamp(double value, double limit) {
+    return std::max(-limit, std::min(limit, value));
+}
 
 class RobotController {
 public:
@@ -53,15 +63,13 @@ public:
     }
 
     void ReturnToInitialPosition() {
-    
         double dx = initial_position.x - state.position()[0];
         double dy = initial_position.y - state.position()[1];
-        sport_client.Move(dx, dy, 0);
-        
-        
-        double dyaw = initial_position.yaw - state.imu_state().rpy()[2];
-        //rotation:
-        sport_client.Euler(0,0,dyaw);
+        double yaw = state.imu_state().rpy()[2];
+        double bx = std::cos(yaw) * dx + std::sin(yaw) * dy;
+        double by = -std::sin(yaw) * dx + std::cos(yaw) * dy;
+        double dyaw = std::atan2(std::sin(initial_position.yaw - yaw), std::cos(initial_position.yaw - yaw));
+        sport_client.Move(Clamp(bx, MAX_SPEED), Clamp(by, MAX_SPEED), Clamp(dyaw, MAX_YAW_RATE));
     }
 
     void HighStateHandler(const void *message) {

@@ -4,6 +4,7 @@
 #include <unitree/robot/go2/sport/sport_client.hpp>
 #include <unitree/idl/go2/SportModeState_.hpp>
 #include <unistd.h>
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 #include <functional>
@@ -27,6 +28,13 @@ struct Position {
 const double alpha_filter = 0.98;   // pondération pour l'orientation
 const double alpha_pos    = 0.5;     // pondération pour la position
 const double g            = 9.81;      // gravité (m/s²)
+
+// Move() takes a body-frame velocity, so the speed is limited and the world-frame error is rotated
+const double MAX_SPEED = 0.3;  // [m/s]
+
+double Clamp(double value, double limit) {
+    return std::max(-limit, std::min(limit, value));
+}
 
 class RobotController {
 public:
@@ -149,21 +157,20 @@ public:
 
     // Retour à la position initiale en utilisant les valeurs filtrées
     void ReturnToInitialPosition() {
-        double dx, dy;
+        double dx, dy, yaw;
         {
             std::lock_guard<std::mutex> lock(state_mutex);
             dx = initial_position.x - f_x;
             dy = initial_position.y - f_y;
+            yaw = f_yaw;
         }
-        sport_client.Move(dx/2, dy/2, 0); //on divise en deux fois, car Move va trop vite sur des grandes distances
+        double bx = std::cos(yaw) * dx + std::sin(yaw) * dy;
+        double by = -std::sin(yaw) * dx + std::cos(yaw) * dy;
+        sport_client.Move(Clamp(bx, MAX_SPEED), Clamp(by, MAX_SPEED), 0);
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        sport_client.Move(dx/2, dy/2, 0);
+        sport_client.Move(Clamp(bx, MAX_SPEED), Clamp(by, MAX_SPEED), 0);
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        /* à améliorer puis décommenter
-        double dyaw = initial_position.yaw - f_yaw;
-        sport_client.Move(0,0,dyaw); //le troisième paramètre de Move est le lacet (yaw)
-        */
-        
+        // TODO: correct the heading as well
     }
 
     // Membres
