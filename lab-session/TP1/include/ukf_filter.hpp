@@ -14,7 +14,7 @@ public:
     UKFFilter();
     ~UKFFilter();
     
-    // HARMONISÉ - Interface qui correspond au main.cpp
+    // Interface qui correspond au main.cpp
     void initialize(const Eigen::VectorXd& initial_state, 
                    const Eigen::MatrixXd& initial_covariance);
     
@@ -32,7 +32,7 @@ public:
     double getAverageInnovation() const;
 
 private:
-    // AJOUTÉ - Membres manquants
+    // Membres manquants
     bool initialized_;
     int state_dim_;
     
@@ -50,7 +50,7 @@ private:
     double kappa_;  // secondary scaling parameter (0 or 3-n)
     double lambda_; // composite scaling parameter
     
-    // AJOUTÉ - Weights for sigma points
+    // Weights for sigma points
     Eigen::VectorXd w_mean_;
     Eigen::VectorXd w_cov_;
     

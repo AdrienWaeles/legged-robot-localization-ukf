@@ -12,7 +12,7 @@
 
 // Add this function HERE (before TestResults struct)
 bool performRobustRotation(UnitreeController& controller, double target_angle_deg, bool use_ukf = false, UKFFilter* filter = nullptr) {
-    std::cout << "🔄 Starting robust " << target_angle_deg << "° rotation..." << std::endl;
+    std::cout << "Starting robust " << target_angle_deg << "° rotation..." << std::endl;
     
     // Multiple speed attempts - start slow, increase if needed
     std::vector<double> speed_levels = {0.15, 0.25, 0.35, 0.5};
@@ -53,7 +53,7 @@ bool performRobustRotation(UnitreeController& controller, double target_angle_de
         
         // Final stop
         controller.stop();
-        std::cout << "  ✅ Rotation attempt " << (attempt + 1) << " completed" << std::endl;
+        std::cout << "  Rotation attempt " << (attempt + 1) << " completed" << std::endl;
         
         // Wait to see if robot responds
         std::this_thread::sleep_for(std::chrono::seconds(2));
@@ -76,15 +76,15 @@ bool performRobustRotation(UnitreeController& controller, double target_angle_de
         Eigen::VectorXd measurement(3);
         measurement << current.x, current.y, current.theta;
         filter->update(measurement);
-        std::cout << "🔧 UKF updated after rotation" << std::endl;
+        std::cout << "UKF updated after rotation" << std::endl;
     }
     
-    std::cout << "🎯 Robust rotation sequence completed!" << std::endl;
+    std::cout << "Robust rotation sequence completed!" << std::endl;
     return true;
 }
 
 bool performSDKRotation(UnitreeController& controller, double target_angle_deg, bool use_ukf = false, UKFFilter* filter = nullptr) {
-    std::cout << "🔄 Starting SDK-based " << target_angle_deg << "° rotation..." << std::endl;
+    std::cout << "Starting SDK-based " << target_angle_deg << "° rotation..." << std::endl;
     
     // Convert to radians
     double target_rad = target_angle_deg * M_PI / 180.0;
@@ -166,12 +166,12 @@ bool performSDKRotation(UnitreeController& controller, double target_angle_deg, 
     
     // Try each strategy
     for (const auto& strategy : rotation_strategies) {
-        std::cout << "🎯 " << strategy.first << std::endl;
+        std::cout << "" << strategy.first << std::endl;
         
         // Execute the strategy
         strategy.second();
         
-        std::cout << "  ✅ Strategy completed, checking robot response..." << std::endl;
+        std::cout << "  Strategy completed, checking robot response..." << std::endl;
         std::this_thread::sleep_for(std::chrono::seconds(2));
         
         // Let the robot settle
@@ -189,10 +189,10 @@ bool performSDKRotation(UnitreeController& controller, double target_angle_deg, 
         Eigen::VectorXd measurement(3);
         measurement << current.x, current.y, current.theta;
         filter->update(measurement);
-        std::cout << "🔧 UKF updated after SDK rotation" << std::endl;
+        std::cout << "UKF updated after SDK rotation" << std::endl;
     }
     
-    std::cout << "🎯 SDK-based rotation sequence completed!" << std::endl;
+    std::cout << "SDK-based rotation sequence completed!" << std::endl;
     return true;
 }
 
@@ -221,7 +221,7 @@ TestResults performLinearTest(UnitreeController& controller, bool use_ukf = fals
     RobotPose initial_pose = controller.getCurrentPose();
     
     if (use_ukf && filter) {
-        std::cout << "🔧 Initializing UKF filter..." << std::endl;
+        std::cout << "Initializing UKF filter..." << std::endl;
         
         // Initialize UKF with proper state vector and covariance
         Eigen::VectorXd initial_state(3);
@@ -230,7 +230,7 @@ TestResults performLinearTest(UnitreeController& controller, bool use_ukf = fals
         Eigen::MatrixXd initial_covariance = Eigen::MatrixXd::Identity(3, 3) * 0.1;
         
         filter->initialize(initial_state, initial_covariance);
-        std::cout << "✅ UKF filter initialized successfully!" << std::endl;
+        std::cout << "UKF filter initialized successfully!" << std::endl;
     }
     
     std::cout << "Initial pose: (" << std::fixed << std::setprecision(3) 
@@ -244,7 +244,7 @@ TestResults performLinearTest(UnitreeController& controller, bool use_ukf = fals
     
     RobotPose pose_after_forward = controller.getCurrentPose();
     if (use_ukf && filter) {
-        std::cout << "🔧 Applying UKF prediction and update..." << std::endl;
+        std::cout << "Applying UKF prediction and update..." << std::endl;
         
         // Apply UKF filtering
         filter->predict(2.0 / 0.3);  // time = distance / speed
@@ -260,7 +260,7 @@ TestResults performLinearTest(UnitreeController& controller, bool use_ukf = fals
         pose_after_forward.y = filtered_state(1);
         pose_after_forward.theta = filtered_state(2);
         
-        std::cout << "✅ UKF filtering applied!" << std::endl;
+        std::cout << "UKF filtering applied!" << std::endl;
     }
     
     std::cout << "Pose after forward: (" << std::fixed << std::setprecision(3) 
@@ -276,7 +276,7 @@ TestResults performLinearTest(UnitreeController& controller, bool use_ukf = fals
     
     RobotPose final_pose = controller.getCurrentPose();
     if (use_ukf && filter) {
-        std::cout << "🔧 Applying UKF prediction and update..." << std::endl;
+        std::cout << "Applying UKF prediction and update..." << std::endl;
         
         // Apply UKF filtering
         filter->predict(2.0 / 0.3);
@@ -292,7 +292,7 @@ TestResults performLinearTest(UnitreeController& controller, bool use_ukf = fals
         final_pose.y = filtered_state(1);
         final_pose.theta = filtered_state(2);
         
-        std::cout << "✅ UKF filtering applied!" << std::endl;
+        std::cout << "UKF filtering applied!" << std::endl;
     }
     
     std::cout << "Final pose: (" << std::fixed << std::setprecision(3) 
@@ -330,7 +330,7 @@ TestResults performLinearWithRotationTest(UnitreeController& controller, bool us
     RobotPose initial_pose = controller.getCurrentPose();
     
     if (use_ukf && filter) {
-        std::cout << "🔧 Initializing UKF filter..." << std::endl;
+        std::cout << "Initializing UKF filter..." << std::endl;
         
         // Initialize UKF with proper state vector and covariance
         Eigen::VectorXd initial_state(3);
@@ -339,7 +339,7 @@ TestResults performLinearWithRotationTest(UnitreeController& controller, bool us
         Eigen::MatrixXd initial_covariance = Eigen::MatrixXd::Identity(3, 3) * 0.1;
         
         filter->initialize(initial_state, initial_covariance);
-        std::cout << "✅ UKF filter initialized successfully!" << std::endl;
+        std::cout << "UKF filter initialized successfully!" << std::endl;
     }
     
     std::cout << "Initial pose: (" << std::fixed << std::setprecision(3) 
@@ -357,7 +357,7 @@ TestResults performLinearWithRotationTest(UnitreeController& controller, bool us
                 Eigen::VectorXd measurement(3);
                 measurement << current.x, current.y, current.theta;
                 filter->update(measurement);
-                std::cout << "🔧 UKF updated after forward movement" << std::endl;
+                std::cout << "UKF updated after forward movement" << std::endl;
             }
         }},
         {"Rotating 180° (Step 1)", [&]() {
@@ -374,7 +374,7 @@ TestResults performLinearWithRotationTest(UnitreeController& controller, bool us
                 Eigen::VectorXd measurement(3);
                 measurement << current.x, current.y, current.theta;
                 filter->update(measurement);
-                std::cout << "🔧 UKF updated after forward movement" << std::endl;
+                std::cout << "UKF updated after forward movement" << std::endl;
             }
         }},
         
@@ -553,11 +553,11 @@ int main(int argc, char** argv) {
         // Overall assessment
         std::cout << "\n=== Overall UKF Performance ===" << std::endl;
         if (linear_improvement > 0 && rotation_improvement > 0) {
-            std::cout << "🎯 UKF SUCCESSFUL: Improved accuracy in both tests!" << std::endl;
+            std::cout << "UKF SUCCESSFUL: Improved accuracy in both tests!" << std::endl;
         } else if (linear_improvement > 0 || rotation_improvement > 0) {
-            std::cout << "✅ UKF PARTIALLY SUCCESSFUL: Improved one test" << std::endl;
+            std::cout << "UKF PARTIALLY SUCCESSFUL: Improved one test" << std::endl;
         } else {
-            std::cout << "⚠️  UKF needs tuning: No improvement detected" << std::endl;
+            std::cout << " UKF needs tuning: No improvement detected" << std::endl;
         }
         
         // Sit down

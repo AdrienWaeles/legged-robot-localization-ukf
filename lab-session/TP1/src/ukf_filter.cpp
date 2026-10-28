@@ -4,7 +4,7 @@
 
 UKFFilter::UKFFilter() : initialized_(false), innovation_sum_(0.0), 
                         innovation_count_(0), last_innovation_(0.0) {
-    // HARMONISÉ - Utiliser STATE_DIM constant
+    // Utiliser STATE_DIM constant
     state_dim_ = STATE_DIM; // 6 dimensions
     
     // Initialize UKF parameters
@@ -36,7 +36,7 @@ UKFFilter::~UKFFilter() {
     // Cleanup if needed
 }
 
-// HARMONISÉ - Interface qui correspond au main.cpp
+// Interface qui correspond au main.cpp
 void UKFFilter::initialize(const Eigen::VectorXd& initial_state, 
                           const Eigen::MatrixXd& initial_covariance) {
     if (initial_state.size() != state_dim_) {
