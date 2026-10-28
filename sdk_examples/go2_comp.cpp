@@ -1,3 +1,6 @@
+// The Custom class is adapted from the sport client example of unitree_sdk2
+// (BSD 3-Clause License, Copyright (c) Unitree Robotics).
+
 #include <chrono>
 #include <cmath>
 #include <cstdlib>
@@ -238,47 +241,47 @@ public:
 
 
 
-// Paramètres du filtre complémentaire
-const double alpha = 0.98;  // Pondération entre les sources de données
-const double g = 9.81;      // Gravité (m/s²)
+// Complementary filter parameters
+const double alpha = 0.98;  // Weight between the data sources
+const double g = 9.81;      // Gravity [m/s^2]
 
-// Fonction de mise à jour du filtre complémentaire
+// Complementary filter update
 void updateOrientation(double &roll, double &pitch, double dt,
                        double gr, double gp, // Gyroscope (rad/s)
-                       double aroll, double apitch) // Accéléromètre (m/s²)
+                       double aroll, double apitch) // Accelerometer [m/s^2]
 {
-    // Estimation de l'orientation à partir du gyroscope (intégration)
+    // Orientation from the gyroscope (integration)
     double roll_gyro = roll + gr * dt;
     double pitch_gyro = pitch + gp * dt;
 
-    // Estimation de l'orientation à partir de l'accéléromètre
+    // Orientation from the accelerometer
     double roll_acc = atan2(apitch, sqrt(aroll * aroll + g * g));
     double pitch_acc = atan2(-aroll, g);
 
-    // Fusion des données
+    // Data fusion
     roll = alpha * roll_gyro + (1 - alpha) * roll_acc;
     pitch = alpha * pitch_gyro + (1 - alpha) * pitch_acc;
 }
 
 
-const double alpha_pos = 0.5; // Coefficient du filtre complémentaire
+const double alpha_pos = 0.5; // Complementary filter weight
 
 void updateTranslation(double &x, double &y, double &z, double dt,
                        double vx, double vy, double vz, 
                        double ax, double ay, double az)
 {
-    // Intégration des vitesses pour estimer la position
+    // Position from the integrated velocity
     double x_vel = x + vx * dt;
     double y_vel = y + vy * dt;
     double z_vel = z + vz * dt;
 
-    // Double intégration de l'accélération pour estimer la position
+    // Position from the double-integrated acceleration
     double x_acc = x + vx * dt + 0.5 * ax * dt * dt;
     double y_acc = y + vy * dt + 0.5 * ay * dt * dt;
     double z_acc = z + vz * dt + 0.5 * az * dt * dt;
     
 
-    // Filtrage complémentaire
+    // Complementary filtering
     x = alpha_pos * x_vel + (1 - alpha_pos) * x_acc;
     y = alpha_pos * y_vel + (1 - alpha_pos) * y_acc;
     z = alpha_pos * z_vel + (1 - alpha_pos) * z_acc;
@@ -299,9 +302,9 @@ int main(int argc, char **argv)
     unitree::robot::ChannelFactory::Instance()->Init(0, argv[1]);
     Custom custom;
 
-    sleep(1); // Attendre 1 seconde pour obtenir un état stable
+    sleep(1); // Wait 1 second for a stable state
 
-    custom.GetInitState(); // Récupérer la position initiale
+    custom.GetInitState(); // Get the initial position
     
     double errgr = 0;
     double errgp = 0;
@@ -344,7 +347,7 @@ int main(int argc, char **argv)
 	while (true)
 	{
 
-	    // Récupération des données filtrées
+	    // Read the bias-corrected data
 	    double gr = custom.state.imu_state().gyroscope()[0]-errgr;
 	    double gp = custom.state.imu_state().gyroscope()[1]-errgp;
 	    double gy = custom.state.imu_state().gyroscope()[2]-errgy;
@@ -358,7 +361,7 @@ int main(int argc, char **argv)
 	    double az = custom.state.imu_state().accelerometer()[2] - erraz;
 
 	  
-	  	/* sans soustraction de l'erreur:
+	  	/* without the bias subtraction:
 	    double gr = custom.state.imu_state().gyroscope()[0];
 	    double gp = custom.state.imu_state().gyroscope()[1];
 	    double gy = custom.state.imu_state().gyroscope()[2];
@@ -372,14 +375,14 @@ int main(int argc, char **argv)
 	    double az = custom.state.imu_state().accelerometer()[2];
 	    	  */
 
-	    // Mise à jour du filtre pour la position
+	    // Position filter update
 	    updateTranslation(x, y, z, dt, vx, vy, vz, ax, ay, az);
 
-	    // Mise à jour du filtre pour l'orientation
+	    // Orientation filter update
 	    updateOrientation(roll, pitch, dt, gr, gp, ax, ay);
 
 /*
-	    // Affichage des résultats
+	    // Print the results
 	    std::cout << "roll: " << roll << " pitch: " << pitch << std::endl;
 	    std::cout << "roll: " << custom.state.imu_state().rpy()[0] << " pitch: " << custom.state.imu_state().rpy()[1] << std::endl;
 	    	*/
