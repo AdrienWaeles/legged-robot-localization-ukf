@@ -24,10 +24,10 @@ struct Position {
     double x, y, yaw;
 };
 
-// Paramètres pour le filtre complémentaire
-const double alpha_filter = 0.98;   // pondération pour l'orientation
-const double alpha_pos    = 0.5;     // pondération pour la position
-const double g            = 9.81;      // gravité (m/s²)
+// Complementary filter parameters
+const double alpha_filter = 0.98;   // weight for the orientation
+const double alpha_pos    = 0.5;     // weight for the position
+const double g            = 9.81;      // gravity [m/s^2]
 
 // Move() takes a body-frame velocity, so the speed is limited and the world-frame error is rotated
 const double MAX_SPEED = 0.3;  // [m/s]
@@ -47,12 +47,12 @@ public:
     {
         sport_client.SetTimeout(10.0f);
         sport_client.Init();
-        // Souscription à l'état haute fréquence du robot
+        // Subscribe to the robot high-frequency state
         suber.reset(new ChannelSubscriber<unitree_go::msg::dds_::SportModeState_>(TOPIC_HIGHSTATE));
         suber->InitChannel(std::bind(&RobotController::HighStateHandler, this, std::placeholders::_1), 1);
     }
 
-    // Calibration sur 10 échantillons pour estimer le biais des capteurs
+    // Average 10 samples to estimate the sensor bias
     void CalibrateSensors() {
         double sum_gr = 0, sum_gp = 0, sum_gy = 0;
         double sum_ax = 0, sum_ay = 0, sum_az = 0;
@@ -83,7 +83,7 @@ public:
         err_vz = sum_vz / 10.0;
     }
 
-    // sauvegarde de la position initiale (filtrée)
+    // Save the initial (filtered) position
     void SaveInitialPosition() {
         std::lock_guard<std::mutex> lock(state_mutex);
         initial_position.x = f_x;
@@ -94,7 +94,7 @@ public:
                   << ", yaw = " << initial_position.yaw << "\n";
     }
 
-    // Mise a jour du filtre complementaire pour l'orientation
+    // Complementary filter update for the orientation
     void updateOrientation(double gr, double gp, double a_roll, double a_pitch) {
         double roll_gyro  = f_roll + gr * dt;
         double pitch_gyro = f_pitch + gp * dt;
@@ -102,11 +102,11 @@ public:
         double pitch_acc  = atan2(-a_roll, g);
         f_roll  = alpha_filter * roll_gyro + (1 - alpha_filter) * roll_acc;
         f_pitch = alpha_filter * pitch_gyro + (1 - alpha_filter) * pitch_acc;
-        // Pour le yaw, on se fie directement à l'IMU
+        // Yaw is taken directly from the IMU
         f_yaw = state.imu_state().rpy()[2];
     }
 
-    // Mise a jour du filtre complémentaire pour la position
+    // Complementary filter update for the position
     void updateTranslation(double vx, double vy, double vz, 
                            double ax, double ay, double az) {
         double x_vel = f_x + vx * dt;
@@ -120,11 +120,11 @@ public:
         f_z = alpha_pos * z_vel + (1 - alpha_pos) * z_acc;
     }
 
-    // Callback recevant l'état du robot et mettant a jour le filtre
+    // Callback receiving the robot state and updating the filter
     void HighStateHandler(const void *message) {
         std::lock_guard<std::mutex> lock(state_mutex);
         state = *(unitree_go::msg::dds_::SportModeState_ *)message;
-        // Correction des mesures avec le biais estimé
+        // Remove the estimated bias from the measurements
         double gr = state.imu_state().gyroscope()[0] - err_gr;
         double gp = state.imu_state().gyroscope()[1] - err_gp;
         double a_roll  = state.imu_state().accelerometer()[0] - err_ax;
@@ -139,23 +139,23 @@ public:
         updateTranslation(vx, vy, vz, ax, ay, az);
     }
 
-    // Méthode d'évitement d'obstacles via le lidar (meme logique que dans ton premier code)
+    // Obstacle avoidance from the lidar ranges (same logic as go2_obstacle.cpp)
     void AvoidObstacle(const geometry_msgs::msg::dds_::PointStamped_ *range_msg) {
         if (range_msg->point().x() < 0.5) {
-            std::cout << "Obstacle devant: " << range_msg->point().x() << "\n";
+            std::cout << "Obstacle ahead: " << range_msg->point().x() << "\n";
             sport_client.Move(-0.3, 0, 0);
         }
         if (range_msg->point().y() < 0.1) {
-            std::cout << "Obstacle gauche: " << range_msg->point().y() << "\n";
+            std::cout << "Obstacle on the left: " << range_msg->point().y() << "\n";
             sport_client.Move(0, -0.3, 0);
         }
         if (range_msg->point().z() < 0.1) {
-            std::cout << "Obstacle droit: " << range_msg->point().z() << "\n";
+            std::cout << "Obstacle on the right: " << range_msg->point().z() << "\n";
             sport_client.Move(0, 0.3, 0);
         }
     }
 
-    // Retour à la position initiale en utilisant les valeurs filtrées
+    // Return to the initial position using the filtered values
     void ReturnToInitialPosition() {
         double dx, dy, yaw;
         {
@@ -180,18 +180,18 @@ public:
     Position initial_position;
     std::mutex state_mutex;  // protects state and the filter variables, written by the DDS thread
     
-    // Variables du filtre complémentaire
+    // Complementary filter variables
     double dt;
     double f_x, f_y, f_z;
     double f_roll, f_pitch, f_yaw;
     
-    // Variables de calibration
+    // Calibration biases
     double err_gr, err_gp, err_gy;
     double err_ax, err_ay, err_az;
     double err_vx, err_vy, err_vz;
 };
 
-// Callback pour traiter les messages du lidar
+// Callback handling the lidar messages
 void Handler(const void *message, RobotController &controller) {
     const geometry_msgs::msg::dds_::PointStamped_ *range_msg = 
             (const geometry_msgs::msg::dds_::PointStamped_ *)message;
@@ -213,16 +213,16 @@ int main(int argc, const char **argv) {
     unitree::robot::ChannelFactory::Instance()->Init(0, argv[1]);
     
     RobotController controller;
-    sleep(1); // Attendre un peu pour obtenir un état stable
+    sleep(1); // Wait for a stable state
     
-    controller.CalibrateSensors();     // Calibration des capteurs
-    controller.SaveInitialPosition();    // Sauvegarde de la position initiale filtrée
+    controller.CalibrateSensors();     // Sensor calibration
+    controller.SaveInitialPosition();    // Save the filtered initial position
 
-    // Souscription aux messages de distance (lidar)
+    // Subscribe to the range messages (lidar)
     ChannelSubscriber<geometry_msgs::msg::dds_::PointStamped_> subscriber(TOPIC_RANGE_INFO);
     subscriber.InitChannel([&](const void *msg) { Handler(msg, controller); });
     
-    // Boucle principale : le robot retourne périodiquement à sa position initiale
+    // Main loop: the robot periodically returns to its initial position
     while (true) {
         controller.ReturnToInitialPosition();
         sleep(2);
