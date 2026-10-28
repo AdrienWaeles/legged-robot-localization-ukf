@@ -84,7 +84,7 @@ position error is the comparison metric.
 |---|---|
 | [`docs/`](docs/) | Final report, presentation slides, SDK quick guide, Ubuntu setup guide (French), internship report (French) |
 | [`sdk_examples/`](sdk_examples/) | Standalone programs: complementary filter, obstacle avoidance, and both combined |
-| [`lab-session/`](lab-session/) | `TP1.zip`: headers and sources for the UKF lab session |
+| [`lab-session/`](lab-session/) | `TP1`: C++ sources of the UKF lab session, with build instructions |
 
 ## Getting started
 

@@ -4,7 +4,7 @@
 
 UKFFilter::UKFFilter() : initialized_(false), innovation_sum_(0.0), 
                         innovation_count_(0), last_innovation_(0.0) {
-    // Utiliser STATE_DIM constant
+    // Use the STATE_DIM constant
     state_dim_ = STATE_DIM; // 6 dimensions
     
     // Initialize UKF parameters
