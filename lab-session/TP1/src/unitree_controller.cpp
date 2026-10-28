@@ -315,23 +315,23 @@ void UnitreeController::debugSportClient() {
     
     try {
         sport_client_->StandUp();
-        std::cout << "✓ StandUp works" << std::endl;
+        std::cout << "StandUp works" << std::endl;
     } catch (...) {
-        std::cout << "✗ StandUp failed" << std::endl;
+        std::cout << "StandUp failed" << std::endl;
     }
     
     try {
         sport_client_->StandDown();
-        std::cout << "✓ StandDown works" << std::endl;
+        std::cout << "StandDown works" << std::endl;
     } catch (...) {
-        std::cout << "✗ StandDown failed" << std::endl;
+        std::cout << "StandDown failed" << std::endl;
     }
     
     try {
         sport_client_->RecoveryStand();
-        std::cout << "✓ RecoveryStand works" << std::endl;
+        std::cout << "RecoveryStand works" << std::endl;
     } catch (...) {
-        std::cout << "✗ RecoveryStand failed" << std::endl;
+        std::cout << "RecoveryStand failed" << std::endl;
     }
 }
 
