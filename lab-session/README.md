@@ -26,4 +26,7 @@ Pass the network interface connected to the robot:
 ./build/unitree_go2_localization <network_interface>
 ```
 
+The controller does not read the robot state yet: the tracked pose stays at zero, so the reported errors are not
+meaningful until state feedback is implemented.
+
 The program moves the robot. Use a clear area and keep the remote control within reach.

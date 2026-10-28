@@ -299,19 +299,13 @@ TestResults performLinearTest(UnitreeController& controller, bool use_ukf = fals
               << final_pose.x << ", " << final_pose.y << ", " 
               << final_pose.theta << ")" << std::endl;
     
-    // Calculate errors (add some noise simulation for demonstration)
+    // Calculate errors from the tracked pose
     double position_error = std::sqrt(std::pow(final_pose.x - initial_pose.x, 2) + 
                                     std::pow(final_pose.y - initial_pose.y, 2));
     double angle_error = std::abs(final_pose.theta - initial_pose.theta) * 180.0 / M_PI;
     
-    // Since pose tracking returns zeros, add simulated drift for demonstration
-    if (!use_ukf) {
-        position_error += 0.15;  // Simulate 15cm drift without UKF
-        angle_error += 5.0;      // Simulate 5° drift without UKF
-    } else {
-        position_error += 0.08;  // Simulate 8cm drift with UKF (improvement)
-        angle_error += 2.0;      // Simulate 2° drift with UKF (improvement)
-    }
+    // NOTE: the controller does not read the robot state yet, so the pose stays at zero
+    // and these errors are not meaningful until state feedback is implemented.
     
     TestResults results;
     results.test_name = use_ukf ? "Linear Test WITH UKF" : "Linear Test WITHOUT UKF";
@@ -416,19 +410,13 @@ TestResults performLinearWithRotationTest(UnitreeController& controller, bool us
               << final_pose.x << ", " << final_pose.y << ", " 
               << final_pose.theta << ")" << std::endl;
     
-    // Calculate errors (add some noise simulation for demonstration)
+    // Calculate errors from the tracked pose
     double position_error = std::sqrt(std::pow(final_pose.x - initial_pose.x, 2) + 
                                     std::pow(final_pose.y - initial_pose.y, 2));
     double angle_error = std::abs(final_pose.theta - initial_pose.theta) * 180.0 / M_PI;
     
-    // Since pose tracking returns zeros, add simulated drift for demonstration
-    if (!use_ukf) {
-        position_error += 0.25;  // Simulate 25cm drift without UKF
-        angle_error += 10.0;     // Simulate 10° drift without UKF
-    } else {
-        position_error += 0.12;  // Simulate 12cm drift with UKF (improvement)
-        angle_error += 4.0;      // Simulate 4° drift with UKF (improvement)
-    }
+    // NOTE: the controller does not read the robot state yet, so the pose stays at zero
+    // and these errors are not meaningful until state feedback is implemented.
     
     TestResults results;
     results.test_name = use_ukf ? "Linear with Rotation Test WITH UKF" : "Linear with Rotation Test WITHOUT UKF";
