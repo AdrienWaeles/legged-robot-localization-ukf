@@ -1,0 +1,31 @@
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+*.swp
+*~
+.idea/
+.vscode/
+
+# C++ / CMake build
+build/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+*.o
+
+# ROS 2 / colcon
+install/
+log/
+COLCON_IGNORE
+
+# Python
+__pycache__/
+.venv/
+
+# Local / generated
+*.pcd
+*.log
+.env
