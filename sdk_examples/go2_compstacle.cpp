@@ -5,6 +5,8 @@
 #include <unitree/idl/go2/SportModeState_.hpp>
 #include <unistd.h>
 #include <cmath>
+#include <cstdlib>
+#include <functional>
 #include <iostream>
 #include <chrono>
 #include <thread>
