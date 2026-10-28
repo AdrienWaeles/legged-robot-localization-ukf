@@ -1,4 +1,11 @@
+#include <chrono>
 #include <cmath>
+#include <cstdlib>
+#include <functional>
+#include <iostream>
+#include <thread>
+
+#include <unistd.h>
 
 #include <unitree/robot/go2/sport/sport_client.hpp>
 #include <unitree/robot/channel/channel_subscriber.hpp>
@@ -231,8 +238,6 @@ public:
 
 
 
-#include <cmath>
-
 // Paramètres du filtre complémentaire
 const double alpha = 0.98;  // Pondération entre les sources de données
 const double g = 9.81;      // Gravité (m/s²)
@@ -282,10 +287,6 @@ void updateTranslation(double &x, double &y, double &z, double dt,
 
 
 
-
-#include <iostream>
-#include <chrono>
-#include <thread>
 
 int main(int argc, char **argv)
 {

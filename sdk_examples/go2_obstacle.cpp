@@ -3,6 +3,9 @@
 #include <unitree/idl/ros2/PointStamped_.hpp>
 #include <unitree/robot/go2/sport/sport_client.hpp>
 #include <unistd.h>
+#include <cstdlib>
+#include <functional>
+#include <iostream>
 #include <unitree/idl/go2/SportModeState_.hpp>
 
 #define TOPIC_RANGE_INFO "rt/utlidar/range_info"
