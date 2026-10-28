@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <functional>
 #include <iostream>
+#include <mutex>
 #include <chrono>
 #include <thread>
 #include <vector>
@@ -49,6 +50,8 @@ public:
         double sum_ax = 0, sum_ay = 0, sum_az = 0;
         double sum_vx = 0, sum_vy = 0, sum_vz = 0;
         for (int i = 0; i < 10; i++) {
+            {
+            std::lock_guard<std::mutex> lock(state_mutex);
             sum_gr += state.imu_state().gyroscope()[0];
             sum_gp += state.imu_state().gyroscope()[1];
             sum_gy += state.imu_state().gyroscope()[2];
@@ -58,6 +61,7 @@ public:
             sum_vx += state.velocity()[0];
             sum_vy += state.velocity()[1];
             sum_vz += state.velocity()[2];
+            }
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
         err_gr = sum_gr / 10.0;
@@ -73,6 +77,7 @@ public:
 
     // sauvegarde de la position initiale (filtrée)
     void SaveInitialPosition() {
+        std::lock_guard<std::mutex> lock(state_mutex);
         initial_position.x = f_x;
         initial_position.y = f_y;
         initial_position.yaw = f_yaw;
@@ -109,6 +114,7 @@ public:
 
     // Callback recevant l'état du robot et mettant a jour le filtre
     void HighStateHandler(const void *message) {
+        std::lock_guard<std::mutex> lock(state_mutex);
         state = *(unitree_go::msg::dds_::SportModeState_ *)message;
         // Correction des mesures avec le biais estimé
         double gr = state.imu_state().gyroscope()[0] - err_gr;
@@ -143,8 +149,12 @@ public:
 
     // Retour à la position initiale en utilisant les valeurs filtrées
     void ReturnToInitialPosition() {
-        double dx = initial_position.x - f_x;
-        double dy = initial_position.y - f_y;
+        double dx, dy;
+        {
+            std::lock_guard<std::mutex> lock(state_mutex);
+            dx = initial_position.x - f_x;
+            dy = initial_position.y - f_y;
+        }
         sport_client.Move(dx/2, dy/2, 0); //on divise en deux fois, car Move va trop vite sur des grandes distances
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
         sport_client.Move(dx/2, dy/2, 0);
@@ -161,6 +171,7 @@ public:
     unitree::robot::ChannelSubscriberPtr<unitree_go::msg::dds_::SportModeState_> suber;
     unitree_go::msg::dds_::SportModeState_ state;
     Position initial_position;
+    std::mutex state_mutex;  // protects state and the filter variables, written by the DDS thread
     
     // Variables du filtre complémentaire
     double dt;
