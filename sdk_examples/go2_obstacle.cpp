@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <functional>
 #include <iostream>
+#include <mutex>
 #include <unitree/idl/go2/SportModeState_.hpp>
 
 #define TOPIC_RANGE_INFO "rt/utlidar/range_info"
@@ -38,6 +39,7 @@ public:
     }
 
     void SaveInitialPosition() {
+        std::lock_guard<std::mutex> lock(state_mutex);
         initial_position.x = state.position()[0];
         initial_position.y = state.position()[1];
         initial_position.yaw = state.imu_state().rpy()[2];
@@ -60,9 +62,14 @@ public:
     }
 
     void ReturnToInitialPosition() {
-        double dx = initial_position.x - state.position()[0];
-        double dy = initial_position.y - state.position()[1];
-        double yaw = state.imu_state().rpy()[2];
+        unitree_go::msg::dds_::SportModeState_ s;
+        {
+            std::lock_guard<std::mutex> lock(state_mutex);
+            s = state;
+        }
+        double dx = initial_position.x - s.position()[0];
+        double dy = initial_position.y - s.position()[1];
+        double yaw = s.imu_state().rpy()[2];
         double bx = std::cos(yaw) * dx + std::sin(yaw) * dy;
         double by = -std::sin(yaw) * dx + std::cos(yaw) * dy;
         double dyaw = std::atan2(std::sin(initial_position.yaw - yaw), std::cos(initial_position.yaw - yaw));
@@ -70,6 +77,7 @@ public:
     }
 
     void HighStateHandler(const void *message) {
+        std::lock_guard<std::mutex> lock(state_mutex);
         state = *(unitree_go::msg::dds_::SportModeState_ *)message;
     }
 
@@ -77,6 +85,7 @@ public:
     unitree::robot::ChannelSubscriberPtr<unitree_go::msg::dds_::SportModeState_> suber;
     unitree_go::msg::dds_::SportModeState_ state;
     Position initial_position;
+    std::mutex state_mutex;  // state is written by the DDS thread
 };
 
 void Handler(const void *message, RobotController &controller) {
