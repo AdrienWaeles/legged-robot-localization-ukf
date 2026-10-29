@@ -104,8 +104,8 @@ You need a Go2 EDU, an Ubuntu computer on the robot's network, and the Unitree S
 The [SDK quick guide](docs/sdk-quick-guide.pdf) and the [Ubuntu setup guide](docs/ubuntu-setup-guide-fr.pdf)
 (French) cover the setup in more detail.
 
-> **Safety.** These programs move a real robot. Use a clear area and keep the remote control within reach: the
-> return-to-origin code does not limit speed or distance.
+> **Safety.** These programs move a real robot. Use a clear area and keep the remote control within reach. The
+> return-to-origin speed is limited to 0.3 m/s.
 
 ## Limitations
 
