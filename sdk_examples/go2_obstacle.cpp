@@ -3,6 +3,12 @@
 #include <unitree/idl/ros2/PointStamped_.hpp>
 #include <unitree/robot/go2/sport/sport_client.hpp>
 #include <unistd.h>
+#include <algorithm>
+#include <cmath>
+#include <cstdlib>
+#include <functional>
+#include <iostream>
+#include <mutex>
 #include <unitree/idl/go2/SportModeState_.hpp>
 
 #define TOPIC_RANGE_INFO "rt/utlidar/range_info"
@@ -15,6 +21,14 @@ struct Position {
     double x, y, yaw;
 };
 
+// Move() takes a body-frame velocity, so the speed is limited and the world-frame error is rotated
+const double MAX_SPEED = 0.3;      // [m/s]
+const double MAX_YAW_RATE = 0.5;   // [rad/s]
+
+double Clamp(double value, double limit) {
+    return std::max(-limit, std::min(limit, value));
+}
+
 class RobotController {
 public:
     RobotController() {
@@ -25,6 +39,7 @@ public:
     }
 
     void SaveInitialPosition() {
+        std::lock_guard<std::mutex> lock(state_mutex);
         initial_position.x = state.position()[0];
         initial_position.y = state.position()[1];
         initial_position.yaw = state.imu_state().rpy()[2];
@@ -33,35 +48,36 @@ public:
 
     void AvoidObstacle(const geometry_msgs::msg::dds_::PointStamped_ *range_msg) {
      	if (range_msg->point().x()<0.5){
-	     std::cout << "AAAAAAAAAAAAAAAAAA\n";
+	     std::cout << "Obstacle ahead: " << range_msg->point().x() << " m\n";
 	     sport_client.Move(-0.5, 0, 0);
-	     std::cout <<range_msg->point().x() <<"\n";
     	}
 	if (range_msg->point().y()<0.1){
-	     std::cout << "AAAAAAAAAAAAAAAAAA\n";
+	     std::cout << "Obstacle on the left: " << range_msg->point().y() << " m\n";
 	     sport_client.Move(0, -0.3, 0);
-	     std::cout <<range_msg->point().y() <<"\n";
 	}
 	 if (range_msg->point().z()<0.1){
-	     std::cout << "AAAAAAAAAAAAAAAAAA\n";
+	     std::cout << "Obstacle on the right: " << range_msg->point().z() << " m\n";
 	     sport_client.Move(0, 0.3, 0);
-	     std::cout <<range_msg->point().z() <<"\n";
    	}
     }
 
     void ReturnToInitialPosition() {
-    
-        double dx = initial_position.x - state.position()[0];
-        double dy = initial_position.y - state.position()[1];
-        sport_client.Move(dx, dy, 0);
-        
-        
-        double dyaw = initial_position.yaw - state.imu_state().rpy()[2];
-        //rotation:
-        sport_client.Euler(0,0,dyaw);
+        unitree_go::msg::dds_::SportModeState_ s;
+        {
+            std::lock_guard<std::mutex> lock(state_mutex);
+            s = state;
+        }
+        double dx = initial_position.x - s.position()[0];
+        double dy = initial_position.y - s.position()[1];
+        double yaw = s.imu_state().rpy()[2];
+        double bx = std::cos(yaw) * dx + std::sin(yaw) * dy;
+        double by = -std::sin(yaw) * dx + std::cos(yaw) * dy;
+        double dyaw = std::atan2(std::sin(initial_position.yaw - yaw), std::cos(initial_position.yaw - yaw));
+        sport_client.Move(Clamp(bx, MAX_SPEED), Clamp(by, MAX_SPEED), Clamp(dyaw, MAX_YAW_RATE));
     }
 
     void HighStateHandler(const void *message) {
+        std::lock_guard<std::mutex> lock(state_mutex);
         state = *(unitree_go::msg::dds_::SportModeState_ *)message;
     }
 
@@ -69,6 +85,7 @@ public:
     unitree::robot::ChannelSubscriberPtr<unitree_go::msg::dds_::SportModeState_> suber;
     unitree_go::msg::dds_::SportModeState_ state;
     Position initial_position;
+    std::mutex state_mutex;  // state is written by the DDS thread
 };
 
 void Handler(const void *message, RobotController &controller) {
