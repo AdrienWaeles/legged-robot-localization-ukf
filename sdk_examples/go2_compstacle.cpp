@@ -58,20 +58,23 @@ public:
         double sum_ax = 0, sum_ay = 0, sum_az = 0;
         double sum_vx = 0, sum_vy = 0, sum_vz = 0;
         for (int i = 0; i < 10; i++) {
+            unitree_go::msg::dds_::SportModeState_ s;
             {
-            std::lock_guard<std::mutex> lock(state_mutex);
-            sum_gr += state.imu_state().gyroscope()[0];
-            sum_gp += state.imu_state().gyroscope()[1];
-            sum_gy += state.imu_state().gyroscope()[2];
-            sum_ax += state.imu_state().accelerometer()[0];
-            sum_ay += state.imu_state().accelerometer()[1];
-            sum_az += state.imu_state().accelerometer()[2];
-            sum_vx += state.velocity()[0];
-            sum_vy += state.velocity()[1];
-            sum_vz += state.velocity()[2];
+                std::lock_guard<std::mutex> lock(state_mutex);
+                s = state;
             }
+            sum_gr += s.imu_state().gyroscope()[0];
+            sum_gp += s.imu_state().gyroscope()[1];
+            sum_gy += s.imu_state().gyroscope()[2];
+            sum_ax += s.imu_state().accelerometer()[0];
+            sum_ay += s.imu_state().accelerometer()[1];
+            sum_az += s.imu_state().accelerometer()[2];
+            sum_vx += s.velocity()[0];
+            sum_vy += s.velocity()[1];
+            sum_vz += s.velocity()[2];
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
+        std::lock_guard<std::mutex> lock(state_mutex);
         err_gr = sum_gr / 10.0;
         err_gp = sum_gp / 10.0;
         err_gy = sum_gy / 10.0;
@@ -167,9 +170,6 @@ public:
         double bx = std::cos(yaw) * dx + std::sin(yaw) * dy;
         double by = -std::sin(yaw) * dx + std::cos(yaw) * dy;
         sport_client.Move(Clamp(bx, MAX_SPEED), Clamp(by, MAX_SPEED), 0);
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        sport_client.Move(Clamp(bx, MAX_SPEED), Clamp(by, MAX_SPEED), 0);
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
         // TODO: correct the heading as well
     }
 
